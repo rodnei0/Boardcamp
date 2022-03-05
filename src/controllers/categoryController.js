@@ -12,16 +12,7 @@ export async function getCategories(req, res) {
 export async function createCategory(req, res) {
     const { name } = req.body;
 
-    if (name === "") {
-        return res.sendStatus(400)
-    }
-
     try {
-        const category = await db.query(`SELECT * FROM categories WHERE name=$1`,[name]);
-        if (category) {
-            return res.sendStatus(409)
-        }
-
         await db.query(`
             INSERT INTO 
                 categories (name) 
