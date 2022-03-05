@@ -1,0 +1,29 @@
+{
+  "name": "projeto_15_boardcamp",
+  "version": "1.0.0",
+  "main": "./src/app.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx nodemon"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "nodemon": "^2.0.15",
+    "pg": "^8.7.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rodnei0/Boardcamp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rodnei0/Boardcamp/issues"
+  },
+  "homepage": "https://github.com/rodnei0/Boardcamp#readme",
+  "description": ""
+}
