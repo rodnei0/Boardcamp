@@ -4,8 +4,8 @@ export async function getCustomers(req, res) {
     const cpf = req.query.cpf;
 
     try {
-        if (cpf !== undefined) {
-            const result = await db.query(`SELECT * FROM customers WHERE cpf LIKE '${cpf}%'`);
+        if (cpf) {
+            const result = await db.query(`SELECT * FROM customers WHERE cpf LIKE $1`,[`${cpf}%`]);
             if (result.rowCount === 0) {
                 return res.sendStatus(404)
             }
@@ -43,8 +43,6 @@ export async function createCustomer(req, res) {
             return res.sendStatus(409)
         }
         
-        console.log(name, phone, cpf, birthday)
-
         await db.query(`
             INSERT INTO 
                 customers (name, phone, cpf, birthday) 
