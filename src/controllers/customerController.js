@@ -19,7 +19,7 @@ export async function getCustomers(req, res) {
     }
 }
 
-export async function getCustomersByid(req, res) {
+export async function getCustomersById(req, res) {
     const { id } = req.params;
 
     try {

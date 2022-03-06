@@ -1,50 +1,83 @@
 import db from "../db.js";
 import dayjs from "dayjs";
+import sqlstring from "sqlstring";
 
 export async function getRentals(req, res) {
     const customerId = req.query.customerId;
     const gameId = req.query.gameId;
 
-    try {
-        if (customerId) {
-            const result = await db.query(`SELECT * FROM rentals WHERE "customerId"=$1`,[customerId]);
-            if (result.rowCount === 0) {
-                return res.sendStatus(404)
-            }
-            return res.status(200).send(result.rows)
-        }
-        if (gameId) {
-            const result = await db.query(`SELECT * FROM rentals WHERE "gameId"=$1`,[gameId]);
-            if (result.rowCount === 0) {
-                return res.sendStatus(404)
-            }
-            return res.status(200).send(result.rows)
-        }
+    const query = `
+        SELECT rentals.*, 
+            customers.name,
+            games.name,
+            games."categoryId",
+            categories.name 
+            FROM rentals 
+                JOIN customers ON rentals."customerId"=customers.id
+                JOIN games ON rentals."gameId"=games.id
+                JOIN categories ON games."categoryId"=categories.id
+    `;
 
-        const result = await db.query({
-            text:
-                `SELECT rentals.*, 
-                customers.name,
-                games.name,
-                games."categoryId",
-                categories.name 
-                FROM rentals 
-                    JOIN customers ON rentals."customerId"=customers.id
-                    JOIN games ON rentals."gameId"=games.id
-                    JOIN categories ON games."categoryId"=categories.id`,
-            rowMode: 'array'
-        });
-        
-        res.status(200).send(result.rows.map(row => {
+    const customerQuery = `
+        WHERE "customerId"=$1
+    `;
+
+    const gameQuery = `
+        WHERE "gameId"=$1
+    `;
+
+    function resultRows(resultRows) {
+        const result = resultRows.map(row => {
             const [id, customerId, gameId, rentDate, daysRented, returnDate, originalPrice, delayFee, costumerName, gameName, gameCategory, categoryName] = row;
-          
+            
             return {
                 id, customerId, gameId, rentDate, daysRented, returnDate, originalPrice, delayFee, customer: { id: customerId, name: costumerName }, game: { id: gameId, name: gameName, categoryId: gameCategory, categoryName: categoryName }
             }
-        }));
+        })
+        return result
+    }
+
+    try {
+        if (customerId) {
+            const id = parseInt(customerId.replace(/'/g,''));
+
+            const result = await db.query({
+                text:
+                    `${query} ${customerQuery}`,
+                rowMode: 'array'
+            },[sqlstring.escape(id)]);
+
+            if (result.rowCount === 0) {
+                return res.sendStatus(404)
+            }
+
+            return res.status(200).send(resultRows(result.rows));
+        }
+        if (gameId) {
+            const id = parseInt(gameId.replace(/'/g,''));
+
+            const result = await db.query({
+                text:
+                    `${query} ${gameQuery}`,
+                rowMode: 'array'
+            },[sqlstring.escape(id)]);
+
+            if (result.rowCount === 0) {
+                return res.sendStatus(404)
+            }
+
+            return res.status(200).send(resultRows(result.rows));
+        }
+                            
+        const result = await db.query({
+            text:
+                `${query}`,
+            rowMode: 'array'
+        });
+        
+        res.status(200).send(resultRows(result.rows));
     } catch (error) {
         res.status(500).send(error);
-        console.log(error)
     }
 }
 
@@ -63,11 +96,11 @@ export async function createRental(req, res) {
         }
 
         const result = await db.query(`SELECT COUNT("gameId") FROM rentals WHERE "returnDate" IS NULL AND "gameId"=$1`,[gameId]);
-        if (result.rows[0].count > game.rows[0].stockTotal) {
+        if (result.rows[0].count >= game.rows[0].stockTotal) {
             return res.sendStatus(400)
         }
 
-        const rentDate = dayjs();
+        const rentDate = dayjs('2022-03-01');
         const originalPrice = daysRented * game.rows[0].pricePerDay;
 
         await db.query(`
@@ -96,18 +129,17 @@ export async function returnRental(req, res) {
 
         const rentDate = rental.rows[0].rentDate;
         const daysRented = rental.rows[0].daysRented;
+        const pricePerDay = rental.rows[0].pricePerDay;
 
         const returnDate = new Date(dayjs().format("YYYY-MM-DD"));
         returnDate.setHours(returnDate.getHours() + 4);
 
-        // const returnDateLimit = rentDate.setDate(rentDate.getDate() + daysRented)
-        // console.log(returnDateLimit)
+        const dayInMiliseconds = 60 * 60 * 24 *1000;
+        const diff = (Math.round(Math.abs(returnDate - rentDate)) / dayInMiliseconds);
 
-        const diff = (Math.round(Math.abs(returnDate - rentDate)) / 86400000);
         let delayFee = null
-
         if (diff > daysRented) {
-            delayFee = (diff - daysRented) * rental.rows[0].pricePerDay;
+            delayFee = (diff - daysRented) * pricePerDay;
         } 
 
         await db.query(`

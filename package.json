@@ -14,7 +14,8 @@
     "express": "^4.17.3",
     "joi": "^17.6.0",
     "nodemon": "^2.0.15",
-    "pg": "^8.7.3"
+    "pg": "^8.7.3",
+    "sqlstring": "^2.3.2"
   },
   "repository": {
     "type": "git",

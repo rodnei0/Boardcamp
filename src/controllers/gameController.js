@@ -1,20 +1,59 @@
 import db from "../db.js";
+import sqlstring from "sqlstring";
 
 export async function getGames(req, res) {
     const name = req.query.name;
 
+    const query = `
+        SELECT games.*, 
+            categories.name 
+            FROM games 
+            JOIN categories ON games."categoryId"=categories.id
+    `;
+
+    const nameQuery = `
+        WHERE games.name LIKE $1
+    `;
+
+    function resultRows(resultRows) {
+    const result = resultRows.map(row => {
+        const [id, name, image, stockTotal, categoryId, pricePerDay, categoryName] = row;
+              
+        return {
+            id, name, image, stockTotal, categoryId, pricePerDay, categoryName
+        }
+    })
+    return result
+}
+
     try {
-        if (name !== undefined) {
-            const result = await db.query(`SELECT * FROM games WHERE name LIKE '${name}%'`);
+        if (name) {
+            let gameName = sqlstring.escape(name);
+            gameName = gameName.replace(/'/g,'');
+
+            const result = await db.query({
+                text:
+                    `${query} ${nameQuery}`,
+                rowMode: 'array'
+            },[`${gameName}%`]);
+
             if (result.rowCount === 0) {
                 return res.sendStatus(404)
             }
-            res.status(200).send(result.rows)
+
+            return res.status(200).send(resultRows(result.rows));
         } else {
-            const result = await db.query(`SELECT * FROM games`);
-            res.status(200).send(result.rows)
+            const result = await db.query({
+                text:
+                    `${query}`,
+                rowMode: 'array'
+            });
+            
+            return res.status(200).send(resultRows(result.rows));
         }
     } catch (error) {
+        console.log(error)
+
         res.status(500).send(error);
     }
 }
