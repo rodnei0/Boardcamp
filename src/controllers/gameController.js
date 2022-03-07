@@ -5,10 +5,12 @@ export async function getGames(req, res) {
     const name = req.query.name;
     const offset = res.locals.offset;
     const limit = res.locals.limit;
+    const orderBy = res.locals.orderBy.replace(/'/g,'');
+    const desc = res.locals.desc;
 
     const query = `
         SELECT games.*, 
-            categories.name 
+            categories.name as "categoryName" 
             FROM games 
             JOIN categories ON games."categoryId"=categories.id
     `;
@@ -35,7 +37,12 @@ export async function getGames(req, res) {
 
             const result = await db.query({
                 text:
-                    `${query} ${nameQuery} ${offset} ${limit}`,
+                    `${query}
+                     ${nameQuery} 
+                     ${offset} 
+                     ${limit} 
+                     ${orderBy}
+                     ${desc}`,
                 rowMode: 'array'
             },[`${gameName}%`]);
 
@@ -47,15 +54,17 @@ export async function getGames(req, res) {
         } else {
             const result = await db.query({
                 text:
-                    `${query} ${offset} ${limit}`,
+                    `${query} 
+                     ${offset} 
+                     ${limit}
+                     ${orderBy}
+                     ${desc}`,
                 rowMode: 'array'
             });
             
             return res.status(200).send(resultRows(result.rows));
         }
     } catch (error) {
-        console.log(error)
-
         res.status(500).send(error);
     }
 }

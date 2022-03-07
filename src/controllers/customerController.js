@@ -4,6 +4,8 @@ export async function getCustomers(req, res) {
     const cpf = req.query.cpf;
     const offset = res.locals.offset;
     const limit = res.locals.limit;
+    const orderBy = res.locals.orderBy.replace(/'/g,'');
+    const desc = res.locals.desc;
 
     try {
         if (cpf) {
@@ -13,7 +15,7 @@ export async function getCustomers(req, res) {
             }
             res.status(200).send(result.rows)
         } else {
-            const result = await db.query(`SELECT * FROM customers ${offset} ${limit}`);
+            const result = await db.query(`SELECT * FROM customers ${offset} ${limit} ${orderBy} ${desc}`);
             res.status(200).send(result.rows)
         }
     } catch (error) {

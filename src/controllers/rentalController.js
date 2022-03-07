@@ -7,6 +7,8 @@ export async function getRentals(req, res) {
     const gameId = req.query.gameId;
     const offset = res.locals.offset;
     const limit = res.locals.limit;
+    const orderBy = res.locals.orderBy.replace(/'/g,'');
+    const desc = res.locals.desc;
 
     const query = `
         SELECT rentals.*, 
@@ -65,7 +67,12 @@ export async function getRentals(req, res) {
 
             const result = await db.query({
                 text:
-                    `${query} ${customerQuery} ${offset} ${limit}`,
+                    `${query} 
+                     ${customerQuery} 
+                     ${offset} 
+                     ${limit}
+                     ${orderBy}
+                     ${desc}`,
                 rowMode: 'array'
             },[sqlstring.escape(id)]);
 
@@ -80,7 +87,12 @@ export async function getRentals(req, res) {
 
             const result = await db.query({
                 text:
-                    `${query} ${gameQuery} ${offset} ${limit}`,
+                    `${query} 
+                     ${gameQuery} 
+                     ${offset} 
+                     ${limit}
+                     ${orderBy}
+                     ${desc}`,
                 rowMode: 'array'
             },[sqlstring.escape(id)]);
 
@@ -93,7 +105,11 @@ export async function getRentals(req, res) {
                             
         const result = await db.query({
             text:
-                `${query} ${offset} ${limit}`,
+                `${query} 
+                 ${offset} 
+                 ${limit}
+                 ${orderBy}
+                 ${desc}`,
             rowMode: 'array'
         });
         
@@ -122,7 +138,7 @@ export async function createRental(req, res) {
             return res.sendStatus(400)
         }
 
-        const rentDate = dayjs('2022-03-01');
+        const rentDate = dayjs();
         const originalPrice = daysRented * game.rows[0].pricePerDay;
 
         await db.query(`
