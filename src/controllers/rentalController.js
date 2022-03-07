@@ -5,6 +5,8 @@ import sqlstring from "sqlstring";
 export async function getRentals(req, res) {
     const customerId = req.query.customerId;
     const gameId = req.query.gameId;
+    const offset = res.locals.offset;
+    const limit = res.locals.limit;
 
     const query = `
         SELECT rentals.*, 
@@ -28,10 +30,30 @@ export async function getRentals(req, res) {
 
     function resultRows(resultRows) {
         const result = resultRows.map(row => {
-            const [id, customerId, gameId, rentDate, daysRented, returnDate, originalPrice, delayFee, costumerName, gameName, gameCategory, categoryName] = row;
+            const [id, 
+                customerId, 
+                gameId, 
+                rentDate, 
+                daysRented, 
+                returnDate, 
+                originalPrice, 
+                delayFee, 
+                costumerName, 
+                gameName, 
+                gameCategory, 
+                categoryName] = row;
             
             return {
-                id, customerId, gameId, rentDate, daysRented, returnDate, originalPrice, delayFee, customer: { id: customerId, name: costumerName }, game: { id: gameId, name: gameName, categoryId: gameCategory, categoryName: categoryName }
+                id, 
+                customerId, 
+                gameId, 
+                rentDate, 
+                daysRented, 
+                returnDate, 
+                originalPrice, 
+                delayFee, 
+                customer: { id: customerId, name: costumerName }, 
+                game: { id: gameId, name: gameName, categoryId: gameCategory, categoryName: categoryName }
             }
         })
         return result
@@ -43,7 +65,7 @@ export async function getRentals(req, res) {
 
             const result = await db.query({
                 text:
-                    `${query} ${customerQuery}`,
+                    `${query} ${customerQuery} ${offset} ${limit}`,
                 rowMode: 'array'
             },[sqlstring.escape(id)]);
 
@@ -58,7 +80,7 @@ export async function getRentals(req, res) {
 
             const result = await db.query({
                 text:
-                    `${query} ${gameQuery}`,
+                    `${query} ${gameQuery} ${offset} ${limit}`,
                 rowMode: 'array'
             },[sqlstring.escape(id)]);
 
@@ -71,7 +93,7 @@ export async function getRentals(req, res) {
                             
         const result = await db.query({
             text:
-                `${query}`,
+                `${query} ${offset} ${limit}`,
             rowMode: 'array'
         });
         

@@ -3,6 +3,8 @@ import sqlstring from "sqlstring";
 
 export async function getGames(req, res) {
     const name = req.query.name;
+    const offset = res.locals.offset;
+    const limit = res.locals.limit;
 
     const query = `
         SELECT games.*, 
@@ -17,14 +19,14 @@ export async function getGames(req, res) {
 
     function resultRows(resultRows) {
     const result = resultRows.map(row => {
-        const [id, name, image, stockTotal, categoryId, pricePerDay, categoryName] = row;
-              
-        return {
-            id, name, image, stockTotal, categoryId, pricePerDay, categoryName
-        }
-    })
-    return result
-}
+            const [id, name, image, stockTotal, categoryId, pricePerDay, categoryName] = row;
+                
+            return {
+                id, name, image, stockTotal, categoryId, pricePerDay, categoryName
+            }
+        })
+        return result
+    }
 
     try {
         if (name) {
@@ -33,7 +35,7 @@ export async function getGames(req, res) {
 
             const result = await db.query({
                 text:
-                    `${query} ${nameQuery}`,
+                    `${query} ${nameQuery} ${offset} ${limit}`,
                 rowMode: 'array'
             },[`${gameName}%`]);
 
@@ -45,7 +47,7 @@ export async function getGames(req, res) {
         } else {
             const result = await db.query({
                 text:
-                    `${query}`,
+                    `${query} ${offset} ${limit}`,
                 rowMode: 'array'
             });
             

@@ -1,8 +1,11 @@
 import db from "../db.js";
 
 export async function getCategories(req, res) {
+    const offset = res.locals.offset;
+    const limit = res.locals.limit;
+
     try {
-        const result = await db.query(`SELECT * FROM categories`);
+        const result = await db.query(`SELECT * FROM categories ${offset} ${limit}`);
         res.status(200).send(result.rows);
     } catch (error) {
         res.status(500).send(error);
@@ -27,5 +30,7 @@ export async function createCategory(req, res) {
         res.sendStatus(201);
     } catch (error) {
         res.status(500).send(error);
+        console.log(error)
+
     }
 }

@@ -2,6 +2,8 @@ import db from "../db.js";
 
 export async function getCustomers(req, res) {
     const cpf = req.query.cpf;
+    const offset = res.locals.offset;
+    const limit = res.locals.limit;
 
     try {
         if (cpf) {
@@ -11,7 +13,7 @@ export async function getCustomers(req, res) {
             }
             res.status(200).send(result.rows)
         } else {
-            const result = await db.query(`SELECT * FROM customers`);
+            const result = await db.query(`SELECT * FROM customers ${offset} ${limit}`);
             res.status(200).send(result.rows)
         }
     } catch (error) {
